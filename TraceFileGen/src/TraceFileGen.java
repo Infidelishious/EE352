@@ -15,20 +15,25 @@ import javax.swing.JTextField;
 
 
 public class TraceFileGen extends JFrame implements ActionListener{
-	 //String hex = Integer.toHexString(val);
+	 
 	JLabel size_label, 
 		info_label, 
 		info_label2,
-		f_label;
+		f_label,
+		ram_label,
+		c_label;
 	
 	JTextField size_field,
-			f_field;
+			f_field,
+			ram_field,
+			c_field;
 	
 	JButton make_button;
 	
 	Random r;
 	
-	long size;
+	long size, last, mmsize;
+	float prob;
 	
 	public TraceFileGen(){
 		r = new Random();
@@ -43,6 +48,12 @@ public class TraceFileGen extends JFrame implements ActionListener{
 		size_label = new JLabel("Enter # of traces:");
 		size_field = new JTextField();
 		
+		ram_label = new JLabel("Enter size of mm in MB:");
+		ram_field = new JTextField();
+		
+		c_label = new JLabel("<html>Enter Probabilty of<br>continuious memory acces(0.0-1.0):</html>");
+		c_field = new JTextField();
+		
 		make_button = new JButton("Create");
 		make_button.addActionListener(this);
 		
@@ -52,13 +63,19 @@ public class TraceFileGen extends JFrame implements ActionListener{
 		add(f_label);
 		add(f_field);
 		
+		add(ram_label);
+		add(ram_field);
+		
+		add(c_label);
+		add(c_field);
+		
 		add(size_label);
 		add(size_field);
 		
 		add(new JLabel());
 		add(make_button);
 		
-		setSize(500, 200);
+		setSize(500, 300);
 		setResizable(false);
 		setVisible(true);
 		
@@ -68,9 +85,8 @@ public class TraceFileGen extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		size = Long.parseLong(size_field.getText());
-		//ArrayList<String> trace = new ArrayList<String>();
-		
-			//trace.add();
+		prob = Float.parseFloat(c_field.getText());
+		mmsize = Long.parseLong(ram_field.getText()) * 1024 * 1024;
 		
 		System.out.println("Creating Trace File " + f_field.getText() + " of length " + size);
 		
@@ -94,19 +110,21 @@ public class TraceFileGen extends JFrame implements ActionListener{
 	}
 	
 	private String makeHex() {
-		String out = "0x";
+		boolean cont = (!(last == 0) && r.nextFloat() < prob);
 		
-		for(int i = 0; i < 8; i++)
-		{
-			char c = 0;
-			int k = r.nextInt(16);
-			if(k < 10)
-				c = (char) ('0' + k);
-			else
-				c = (char) ('a' + (k - 10));
-			out += c;
-		}
-		return out;
+		long n = 0;
+		
+		if(!cont)
+			n = r.nextInt((int) mmsize);// % ;
+		else
+			n = (last + 1) % mmsize;
+		
+		String out = "0x";
+		String hex = Long.toHexString(n);
+		
+		last = n;
+		
+		return out + hex;
 	}
 
 
