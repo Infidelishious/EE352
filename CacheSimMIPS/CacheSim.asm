@@ -1,8 +1,6 @@
 .data
 endline: .asciiz "\n"
-trace: .word     0 : 700		#One MB of buffer for the  trace file
-					#words are 4bytes(32 bits)
-answer: .space 256
+trace: .word     0 : 700		
 
 prompt: .asciiz "\nEnter line Size (Must be grater than 4 & power of two): "
 prompt2: .asciiz "Associativity (0 = associtive, 1 = direct map): "
@@ -138,3 +136,23 @@ addressToTag: #truns adress in $t0 into tag stored in $t1
 	mult	$t0, $t1       # $t1 = t1*linzsize
 	mflo   	$t0
 	jr $ra
+	
+isaddressintag: #sets $t2 to 1 if $t0 is the tag of $t1, uses $s0
+	move $s0, $ra
+	move $t2, $t1
+	
+	jal adressToTag
+	move $t0, $t2
+	
+	li $t2, 0
+	bne $t1, $t0, over1
+	li $t2, 1
+over1:
+	move $ra, $s0
+	jr $ra
+	
+
+	
+exit:
+    li  $v0, 10 
+    syscall 
