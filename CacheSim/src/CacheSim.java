@@ -49,7 +49,7 @@ public class CacheSim {
 		cachekb = getIntP2("Data Size (kb): ", false);
 		misspen = getInt("Miss Penulty: ", 1, 100, false);
 		
-		cacheSize = (1028 * cachekb)/(lineSize);
+		cacheSize = (1024 * cachekb)/(lineSize);
 		cacheTags = new long[cacheSize];
 		cacheTime = new long[cacheSize];
 		
@@ -118,15 +118,20 @@ public class CacheSim {
 			  {
 				  for(int j = 0; j < 200; j++)
 				  {
-					  ads[i * 200 + j] = j * 10;
+					  if(j % 2 == 0)
+						  ads[i * 200 + j] = i + (cacheSize);
+					  else
+						  ads[i * 200 + j] = i + (cacheSize) * 2;
 				  }
 			  }
 		  }
 		  
-		  for(int i = 0; i < 1000; i++)
-		  {
-		//	  System.out.println(ads[i]);
-		  }
+//		  for(int i = 0; i < 1800; i++)
+//		  {
+//			  System.out.println(ads[i]);
+//			  System.out.println("TAG:" + addressToTag(ads[i]));
+//			  System.out.println("MAP:" + (int) (addressToTag(ads[i]) % cacheSize));
+//		  }
 		  
 		  //misses++;
 		  

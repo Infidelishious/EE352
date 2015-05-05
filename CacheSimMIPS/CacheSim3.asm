@@ -1,6 +1,3 @@
-#EE352 Final Project Code
-#team: Ian Glow, Robyn To
-
 .data
 endline: .asciiz "\n"
 trace: .word     0 : 2000
@@ -12,16 +9,65 @@ prompt:	.asciiz	"\nEnter line Size (Must be grater than 4 & power of two): "
 prompt2: .asciiz "Associativity (0 = associtive, 1 = direct map): "
 prompt3: .asciiz "Enter data size in kb (Must be power of two): "	
 prompt4: .asciiz "Enter miss penilty: "
-F: .asciiz	"\n\nHits:\nMisses:\nTotal Hit Rate:\nTotal Run Time:\nAverage Memory Access Latency:\n"
+F: .asciiz	"\n\nTotal Hit Rate:\nTotal Run Time:\nAverage Memory Access Latencty:\n"
 
 .text  
 main:
 
+#$s7 = adress of tag array 
 #$s6 = line size 
 #$s5 = associtivity 
 #$s4 = datasize
 #$s3 = miss penalty
 #$s2 = size of cache in bytes/line size = size of cache tags in bytes
+
+
+#generate trace
+la $a0, trace       #$a0 =  address of array 
+li $t0, 0	    #$t0 is incrementer for 0 - 69
+li $t1, 0	    #$t1 is incrementer for 0 - 9
+li $t2, 200	    #$t2 is size of straight
+
+fill:
+	mult    $t1, $t2     
+	mflo    $s0 
+	addu	$s0, $s0, $t0 
+	sll     $s0, $s0, 2 #times 4
+	
+	li  $t9, 3
+	div $t1, $t9
+	mfhi $t9
+	
+	bne $t9, 0, mulof3
+	move $t3, $t0
+	j store
+mulof3:	
+	li  $t9, 10
+	mult $t9, $t0
+	mflo $t3
+store:
+	sw      $t3, trace($s0)
+	addi    $t0, $t0, 1
+	bne	$t0, 200, fill
+	li 	$t0, 0	 
+	addi    $t1, $t1, 1
+	bne	$t1, 10, fill
+	
+donefill:
+	li 	$t0, 0	    #$t0 is incrementer for 0 - 1400
+
+read:
+	sll     $s0, $t0, 2
+	lw      $t4, trace($s0)
+	
+	li     $v0, 1			
+	move	$a0, $t4
+	#syscall 
+	
+	#jal endl
+	
+	addi    $t0, $t0, 1
+	bne	$t0, 200, read
 	
 	la $a0, prompt
         li $v0, 4       #print string               
@@ -70,55 +116,16 @@ main:
         li $v0, 4       #print string               
         syscall
 	
-	#generate trace
-	la $a0, trace       #$a0 =  address of array 
-	li $t0, 0	    #$t0 is incrementer for 0 - 69
-	li $t1, 0	    #$t1 is incrementer for 0 - 9
-	li $t2, 200	    #$t2 is size of straight
+#$s7 = adress of tag array 
+#$s6 = line size 
+#$s5 = associtivity (0 = asssoicitive, 1 = direct)
+#$s4 = datasize
+#$s3 = miss penalty
+#$s2 = size of cache in bytes/line size = size of cache tags in bytes
+#$s1 = adress of time array 
 
-fill:
-	mult    $t1, $t2     
-	mflo    $s0 
-	addu	$s0, $s0, $t0 
-	sll     $s0, $s0, 2 #times 4
-	
-	li  $t9, 3
-	div $t1, $t9
-	mfhi $t9
-	
-	bne $t9, 0, mulof3
-	move $t3, $t0
-	j store
-mulof3:	
-	li  $t9, 2
-	div $t0, $t9
-	mfhi $t9
-	bne $t9, 0, mulof2
-	
-	add $t3, $t1, $s2
-	add $t3, $t3, $s2
-	j store
-mulof2:
-	add $t3, $t1, $s2
-store:
-	sw      $t3, trace($s0)
-	addi    $t0, $t0, 1
-	bne	$t0, 200, fill
-	li 	$t0, 0	 
-	addi    $t1, $t1, 1
-	bne	$t1, 10, fill
-	
-donefill:
-	li 	$t0, 0	    #$t0 is incrementer for 0 - 1400
-	
-	#$s6 = line size 
-	#$s5 = associtivity (0 = asssoicitive, 1 = direct)
-	#$s4 = datasize
-	#$s3 = miss penalty
-	#$s2 = size of cache in bytes/line size = size of cache tags in bytes
-
-	#t7 = hits
-	#t6 = misses
+#t7 = hits
+#t6 = misses
 
 #create arrays
 	move $a0, $s2 
@@ -163,7 +170,7 @@ read2:
 	
 	beq $t2, 1, hit
 	add $t6, $t6, 1
-	beq $s5, 0, amiss
+	bne $s5, 0, amiss
 dmiss:
 	#t1 sould be tag of adress
 	
@@ -228,15 +235,18 @@ done:
 	add $t0, $t6, $t7
 	mtc1 $t0, $f2
 	cvt.s.w $f2, $f2
+	#mfc1 $t1, $f0
 	
 	div.s $f12, $f0, $f2
+	
+	#mfc1 $t1, $f0
 	
 	li $v0, 2       #print f12             
         syscall
 	
 	j exit
 
-#########################################################################
+##################################################################3
 	
 addressToTag: #truns adress in $t0 into tag stored in $t1
 	move	$t1, $s6
@@ -271,11 +281,11 @@ loop1:
 	#li 	$t9, 4
 	#mult	$t4, $t9
 	move 	$t9, $t4 
+	#mflo	$t9
 	sll     $t9, $t9, 2
 	
 	lw  $t0, taga($t9)
 	beq $t0, -1, neg1
-	
 	#set t0 to current tag 
 	jal isaddressintag
 	
@@ -295,8 +305,8 @@ over2:
 	jr $ra
 	
 endl:
-	addi $a0, $0, 0xA 
-        addi $v0, $0, 0xB         
+	addi $a0, $0, 0xA #ascii code for LF, if you have any trouble try 0xD for CR.
+        addi $v0, $0, 0xB #syscall 11 prints the lower 8 bits of $a0 as an ascii character.        
         syscall
 	jr $ra
 	
@@ -304,9 +314,11 @@ incTime:
 	li $t4, 0
 loop3:
 	move 	$t9, $t4 
+	mflo	$t9
 	sll     $t9, $t9, 2
 	
-	lw  $t8, tagt($t9) #tag age ++
+	lw  $t8, tagt($t9)
+	#set t0 to current tag age
 	add $t8, $t8, 1
 	sw $t8, tagt($t9)
 	
@@ -321,6 +333,7 @@ storetaginoldest: #t1 stores tag in t1 in oldest location
 	li $t2, 0 #high value
 loop4:
 	move 	$t9, $t4 
+	mflo	$t9
 	sll     $t9, $t9, 2
 	
 	lw  $t8, tagt($t9)
@@ -341,25 +354,6 @@ notbigger:
 	sw $t1, taga($t3) #store tag in location
 	
 	jr $ra 
-	
-printTrace:
-	li $t0, 0
-pt:
-	sll     $s0, $t0, 2
-	lw      $t4, trace($s0)
-	
-	li     $v0, 1			
-	move	$a0, $t4
-	syscall 
-	
-	addi $a0, $0, 0xA 
-        addi $v0, $0, 0xB   
-        syscall
-	
-	addi    $t0, $t0, 1
-	bne	$t0, 2000, pt
-	
-	jr $ra
 
 exit:
     li  $v0, 10 
