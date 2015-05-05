@@ -41,8 +41,8 @@ public class CacheSim {
 			return;
 		}
 		
-		associtivity = getInt("Associativity (1 = associtive, 2 = direct map): ", 1,2, false);	
-		direct = (associtivity == 2);
+		associtivity = getInt("Associativity (0 = associtive, 1 = direct map): ", 0,1, false);	
+		direct = (associtivity == 1);
 		
 		System.out.println("Direct = " + direct);
 			
@@ -81,41 +81,72 @@ public class CacheSim {
 		File workingDirectory = new File(System.getProperty("user.dir"));
 		fileChooser.setCurrentDirectory(workingDirectory);
 		
-		int userSelection = fileChooser.showOpenDialog(fileChooser);
-		 
-		if (userSelection == JFileChooser.APPROVE_OPTION) {
-		    File fileToOpen = fileChooser.getSelectedFile();
-		    
+//		int userSelection = fileChooser.showOpenDialog(fileChooser);
+//		 
+//		if (userSelection == JFileChooser.APPROVE_OPTION) {
+//		    File fileToOpen = fileChooser.getSelectedFile();
+//		    
 		    try {
-				
-		    	System.out.println("Opened file: " + fileToOpen.getAbsolutePath());
-				trace(fileToOpen.getAbsolutePath());
+//				
+//		    	System.out.println("Opened file: " + fileToOpen.getAbsolutePath());
+				//trace(fileToOpen.getAbsolutePath());
+				trace("");
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+//		}
 	}
 	
 	private void trace(String path) throws IOException {
-		  byte[] encoded = Files.readAllBytes(Paths.get(path));
-		  String st = new String(encoded, StandardCharsets.UTF_8);
-		  String[] traces = st.split("\n", -1);
+//		  byte[] encoded = Files.readAllBytes(Paths.get(path));
+//		  String st = new String(encoded, StandardCharsets.UTF_8);
+//		  String[] traces = st.split("\n", -1);
 		  
-		  for(int i = 0; i < traces.length; i++)
+		  int[] ads = new int[2000];
+		  
+		  for (int i = 0; i < 10; i++)
 		  {
-			  long address = stToLong(traces[i]);
+			  if(i % 3 == 0)
+			  {
+				  for(int j = 0; j < 200; j++)
+				  {
+					  ads[i * 200 + j] = j;
+				  }
+			  }
+			  else
+			  {
+				  for(int j = 0; j < 200; j++)
+				  {
+					  ads[i * 200 + j] = j * 10;
+				  }
+			  }
+		  }
+		  
+		  for(int i = 0; i < 1000; i++)
+		  {
+		//	  System.out.println(ads[i]);
+		  }
+		  
+		  //misses++;
+		  
+		  for(int i = 0; i < ads.length; i++)
+		  {
+			  long address = ads[i];//stToLong(traces[i]);
 			  
 			  //System.out.println(traces[i] + " (" + address + ")");
 			  //System.out.println("TAG" + addressToTag(address));
 			  
 			  boolean hit = false;
 			  
+			  incTime(); 
+			  
 			  for(int j = 0; j < cacheTags.length; j++)
 			  {
 				  if(cacheTags[j] != -1 && isAdressInTag(address, cacheTags[j]))
 				  {
 					  hit = true;
+					  cacheTime[j] = 0;
 					  break;
 				  }
 			  }
@@ -123,6 +154,7 @@ public class CacheSim {
 			  if(hit)
 			  {
 				  hits++;
+				 
 			  }
 			  else
 			  {
@@ -137,12 +169,14 @@ public class CacheSim {
 					  int target = findOldest();
 					  cacheTime[target] = 0;
 					  cacheTags[target] = addressToTag(address);
-					  incTime(); 
+					  //incTime(); 
 				  }
 			  }
 		  }
 		  
-		  System.out.println("\nTotal Hit Rate: " + (hits/(float)(hits + misses)));
+		  System.out.println("\nHits: " + hits);
+		  System.out.println("Misses: " + misses);
+		  System.out.println("Total Hit Rate: " + (hits/(float)(hits + misses)));
 		  System.out.println("Total Run Time: " + (hits * HIT_TIME +  misses * misspen));
 		  System.out.println("Average Memory Access Latency: " + (hits * HIT_TIME +  misses * misspen)/(float)(hits + misses));
 	}
@@ -220,7 +254,7 @@ public class CacheSim {
 			try
 			{
 				temp = in.nextInt();
-				if(temp <= 0)
+				if(temp < 0)
 				{
 					System.out.println("That is not an option. Please try again");
 					continue;
